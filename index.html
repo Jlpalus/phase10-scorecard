@@ -64,8 +64,8 @@
   <label>Number of Players:</label>
   <select id="playerCount" onchange="buildTables()">
  <option>2</option>
-  <option>3</option>
-  <option selected>4</option>
+  <option selected>3</option>
+  <option>4</option>
   <option>5</option>
   <option>6</option>
   </select>
@@ -92,7 +92,9 @@ function buildTables() {
 
   // Build player name fields
   for (let i = 0; i < numPlayers; i++) {
-    nameInputs.innerHTML += `<input type="text" value="Player ${i+1}" oninput="updateNames(${i})">`;
+    const defaultNames = ["Jennifer", "Ruth", "Terry", "Player 4", "Player 5", "Player 6"];
+nameInputs.innerHTML += `<input type="text" value="${defaultNames[i] || 'Player ' + (i+1)}" oninput="updateNames(${i})">`;
+
   }
 
   // Build header rows
