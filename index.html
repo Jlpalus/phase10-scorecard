@@ -49,6 +49,12 @@
       margin: 0;
     }
     .placement { font-weight: bold; background: #e0e0e0; }
+    #resetButton {
+      display: block;
+      margin: 20px auto;
+      padding: 8px 16px;
+      font-size: 14px;
+    }
     @media (max-width: 600px) {
       .names input { width: 80px; }
       th, td { font-size: 12px; padding: 2px 4px; }
@@ -77,27 +83,29 @@
   <table id="totals"></table>
 </div>
 
+<button id="resetButton" onclick="resetGame()">Reset Game</button>
+
 <script>
 const phases = ["1","2","3","4","5","bonus","6","7","8","9","10","bonus"];
 const defaultNames = ["Jennifer", "Ruth", "Terry", "Player 4", "Player 5", "Player 6"];
+let suppressSave = false;
 
 function buildTables() {
   const scores = document.getElementById("scores");
   const totals = document.getElementById("totals");
   const nameInputs = document.getElementById("nameInputs");
-  const numPlayers = parseInt(document.getElementById("playerCount").value);
+  const playerSelect = document.getElementById("playerCount");
+  const numPlayers = parseInt(playerSelect.value);
 
   scores.innerHTML = '';
   totals.innerHTML = '';
   nameInputs.innerHTML = '';
 
-  // Name inputs
   for (let i = 0; i < numPlayers; i++) {
     nameInputs.innerHTML +=
-      `<input type="text" value="${defaultNames[i]}" oninput="updateNames(${i})">`;
+      `<input type="text" value="${defaultNames[i]}" oninput="updateNames(${i}); saveGame()">`;
   }
 
-  // Headers
   let scoreHeader = `<thead><tr><th>Phase</th>`;
   let totalHeader = `<thead><tr><th>Phase</th>`;
   for (let i = 0; i < numPlayers; i++) {
@@ -129,7 +137,7 @@ function buildTables() {
     for (let p = 0; p < numPlayers; p++) {
       scoreRow += (label === "bonus")
         ? `<td><em>AUTO</em></td>`
-        : `<td><input type="number" data-p="${p}" data-r="${r}" oninput="recalc()"></td>`;
+        : `<td><input type="number" data-p="${p}" data-r="${r}" oninput="recalc(); saveGame()">`;
       totalRow += `<td id="t-${p}-${r}"></td>`;
     }
 
@@ -137,12 +145,14 @@ function buildTables() {
     totalBody.innerHTML += totalRow + "</tr>";
   });
 
+  restoreGame();
   recalc();
 }
 
 function recalc() {
   const numPlayers = parseInt(document.getElementById("playerCount").value);
   const totals = [];
+  let gameStarted = false;
 
   for (let p = 0; p < numPlayers; p++) {
     let top = 0, bottom = 0;
@@ -157,6 +167,7 @@ function recalc() {
       } else {
         const input = document.querySelector(`input[data-p="${p}"][data-r="${r}"]`);
         val = input ? parseInt(input.value) || 0 : 0;
+        if (val > 0) gameStarted = true;
       }
 
       if (r < 6) {
@@ -173,6 +184,7 @@ function recalc() {
     totals[p] = total;
   }
 
+  document.getElementById("playerCount").disabled = gameStarted;
   updateRanks(totals);
 }
 
@@ -205,6 +217,43 @@ function ordinal(n) {
 function updateNames(i) {
   const name = document.querySelectorAll(".names input")[i].value || defaultNames[i];
   document.querySelectorAll(`.p${i}`).forEach(el => el.textContent = name);
+}
+
+function saveGame() {
+  if (suppressSave) return;
+  const state = {
+    playerCount: document.getElementById("playerCount").value,
+    names: Array.from(document.querySelectorAll(".names input")).map(input => input.value),
+    scores: Array.from(document.querySelectorAll("input[type=number]")).map(input => input.value)
+  };
+  localStorage.setItem("phase10game", JSON.stringify(state));
+}
+
+function restoreGame() {
+  const saved = localStorage.getItem("phase10game");
+  if (!saved) return;
+  suppressSave = true;
+  const state = JSON.parse(saved);
+  document.getElementById("playerCount").value = state.playerCount;
+  const nameInputs = document.querySelectorAll(".names input");
+  state.names.forEach((name, i) => {
+    if (nameInputs[i]) {
+      nameInputs[i].value = name;
+      updateNames(i);
+    }
+  });
+  const scoreInputs = document.querySelectorAll("input[type=number]");
+  state.scores.forEach((val, i) => {
+    if (scoreInputs[i]) scoreInputs[i].value = val;
+  });
+  suppressSave = false;
+}
+
+function resetGame() {
+  if (!confirm("Are you sure you want to reset the game?")) return;
+  localStorage.removeItem("phase10game");
+  document.getElementById("playerCount").disabled = false;
+  buildTables();
 }
 
 buildTables();
