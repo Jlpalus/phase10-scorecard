@@ -106,26 +106,26 @@ function buildTables() {
       `<input type="text" value="${defaultNames[i]}" oninput="updateNames(${i}); saveGame()">`;
   }
 
+  // Score table headers
   let scoreHeader = `<thead><tr><th>Phase</th>`;
-  let totalHeader = `<thead><tr><th>Phase</th>`;
   for (let i = 0; i < numPlayers; i++) {
     scoreHeader += `<th class="p${i}">${defaultNames[i]}</th>`;
-    totalHeader += `<th class="p${i}">${defaultNames[i]}</th>`;
   }
   scoreHeader += `</tr></thead>`;
+
+  // Total table headers
+  let totalHeader = `<thead><tr><th>Phase</th>`;
+  for (let i = 0; i < numPlayers; i++) {
+    totalHeader += `<th class="p${i}">${defaultNames[i]}</th>`;
+  }
   totalHeader += `</tr></thead>`;
 
-  scores.innerHTML += scoreHeader +
-    `<tbody id="score-body"></tbody>
-     <tfoot><tr class="placement"><td>Placement</td>` +
-    Array(numPlayers).fill().map((_, i) => `<td id="rank-${i}"></td>`).join('') +
-    `</tr></tfoot>`;
+  // Add headers and bodies
+  scores.innerHTML += scoreHeader + `<tbody id="score-body"></tbody><tfoot><tr class="placement"><td>Placement</td>` +
+    Array(numPlayers).fill().map((_, i) => `<td id="rank-${i}"></td>`).join('') + `</tr></tfoot>`;
 
-  totals.innerHTML += totalHeader +
-    `<tbody id="total-body"></tbody>
-     <tfoot><tr><th>Total</th>` +
-    Array(numPlayers).fill().map((_, i) => `<th id="final-${i}"></th>`).join('') +
-    `</tr></tfoot>`;
+  totals.innerHTML += totalHeader + `<tbody id="total-body"></tbody><tfoot><tr><th>Total</th>` +
+    Array(numPlayers).fill().map((_, i) => `<th id="final-${i}"></th>`).join('') + `</tr></tfoot>`;
 
   const scoreBody = document.getElementById("score-body");
   const totalBody = document.getElementById("total-body");
@@ -145,7 +145,7 @@ function buildTables() {
     totalBody.innerHTML += totalRow + "</tr>";
   });
 
-  restoreGame();
+  restoreGame();  // must come before recalc
   recalc();
 }
 
@@ -193,7 +193,8 @@ function updateRanks(totals) {
   const numPlayers = totals.length;
 
   for (let i = 0; i < numPlayers; i++) {
-    document.getElementById(`rank-${i}`).textContent = "";
+    const cell = document.getElementById(`rank-${i}`);
+    if (cell) cell.textContent = "";
   }
   if (!scored) return;
 
@@ -205,13 +206,14 @@ function updateRanks(totals) {
   sorted.forEach(obj => ranks[obj.i] = ordinal(obj.rank));
 
   for (let p = 0; p < numPlayers; p++) {
-    document.getElementById(`rank-${p}`).textContent = ranks[p];
+    const cell = document.getElementById(`rank-${p}`);
+    if (cell) cell.textContent = ranks[p];
   }
 }
 
 function ordinal(n) {
-  const s=["th","st","nd","rd"], v=n%100;
-  return n+(s[(v-20)%10]||s[v]||s[0]);
+  const s = ["th", "st", "nd", "rd"], v = n % 100;
+  return n + (s[(v - 20) % 10] || s[v] || s[0]);
 }
 
 function updateNames(i) {
