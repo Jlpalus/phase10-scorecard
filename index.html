@@ -94,7 +94,8 @@ function buildTables() {
   for (let i = 0; i < numPlayers; i++) {
     const defaultNames = ["Jennifer", "Ruth", "Terry", "Player 4", "Player 5", "Player 6"];
 nameInputs.innerHTML += `<input type="text" value="${defaultNames[i] || 'Player ' + (i+1)}" oninput="updateNames(${i})">`;
-
+// Force name update so table headers reflect the prefilled names
+for (let i = 0; i < numPlayers; i++) updateNames(i);
   }
 
   // Build header rows
